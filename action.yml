@@ -1,0 +1,32 @@
+name: Yarn
+description: Install Yarn dependencies and run Yarn script in one step with automatic cache.
+author: Minh-Phuc Tran
+branding:
+  icon: box
+  color: blue
+inputs:
+  node-version:
+    description: Node.js version
+    required: true
+    default: 14
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Setup Node.js ${{ inputs.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ inputs.node-version }}
+    - name: Get Yarn cache directory
+      id: get-yarn-cache-dir
+      run: echo "::set-output name=path::$(yarn cache dir)"
+    - name: Cache Yarn dependencies
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.get-yarn-cache-dir.outputs.path }}
+        key: "${{ runner.os }}-node-${{ inputs.node-version }}-yarn-\
+          ${{ hashFiles('**/yarn.lock') }}"
+        restore-keys: |
+          ${{ runner.os }}-node-${{ inputs.node-version }}-yarn-
+    - run: yarn install --frozen-lockfile
